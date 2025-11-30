@@ -1,3 +1,4 @@
+
 # ============================================================================
 # Stage 1: Builder - Clone ComfyUI and install all Python packages (CUDA 12.8)
 # ============================================================================
@@ -74,7 +75,7 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV IMAGEIO_FFMPEG_EXE=/usr/bin/ffmpeg
-ENV FILEBROWSER_CONFIG=/workspace/runpod-slim/.filebrowser.json
+ENV FILEBROWSER_CONFIG=/workspace/.filebrowser.json
 
 # Update and install runtime dependencies, CUDA 12.8, and common tools
 RUN apt-get update && \
@@ -140,8 +141,8 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
     mkdir -p /run/sshd
 
 # Create workspace directory
-RUN mkdir -p /workspace/runpod-slim
-WORKDIR /workspace/runpod-slim
+RUN mkdir -p /workspace/
+WORKDIR /workspace/
 
 # Expose ports
 EXPOSE 8188 22 8888 8080
@@ -155,3 +156,4 @@ RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
     update-alternatives --set python3 /usr/bin/python3.12
 
 ENTRYPOINT ["/start.sh"]
+
