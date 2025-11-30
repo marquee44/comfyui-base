@@ -140,8 +140,8 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/
     mkdir -p /run/sshd
 
 # Create workspace directory
-RUN mkdir -p /workspace/runpod-slim
-WORKDIR /workspace/runpod-slim
+RUN mkdir -p /workspace
+WORKDIR /workspace
 
 # Expose ports
 EXPOSE 8188 22 8888 8080
@@ -155,3 +155,4 @@ RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
     update-alternatives --set python3 /usr/bin/python3.12
 
 ENTRYPOINT ["/start.sh"]
+
