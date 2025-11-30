@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Create ComfyUI directory
+RUN mkdir -p /workspace/ComfyUI
 WORKDIR /workspace/ComfyUI
 
 # Clone ComfyUI
@@ -46,6 +47,9 @@ ENV PYTHONUNBUFFERED=1
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl wget nano ffmpeg openssh-server htop tmux \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install JupyterLab
+RUN pip install --no-cache-dir jupyterlab
 
 # Create workspace
 RUN mkdir -p /workspace
