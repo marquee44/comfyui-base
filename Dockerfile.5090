@@ -1,69 +1,44 @@
-# ============================================================================
-# Stage 1 – Builder: Install ComfyUI + dependencies (Python 3.10 + CUDA 12.x)
-# ============================================================================
-FROM nvcr.io/nvidia/pytorch:24.11-py3 AS builder
-
-ENV DEBIAN_FRONTEND=noninteractive
-ENV PYTHONUNBUFFERED=1
-
-# Basic system tools
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git wget curl nano ffmpeg build-essential python3-venv python3-dev \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Create ComfyUI directory
-RUN mkdir -p /workspace/ComfyUI
-WORKDIR /workspace/ComfyUI
-
-# Clone ComfyUI
-RUN git clone https://github.com/comfyanonymous/ComfyUI.git .
-
-# Install base requirements
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
-
-# Install custom nodes
-WORKDIR /workspace/ComfyUI/custom_nodes
-RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git && \
-    git clone https://github.com/kijai/ComfyUI-KJNodes && \
-    git clone https://github.com/MoonGoblinDev/Civicomfy
-
-# Install custom node deps
-RUN for n in */; do \
-        if [ -f "$n/requirements.txt" ]; then \
-            pip install --no-cache-dir -r "$n/requirements.txt" || true; \
-        fi \
-    ; done
-
-# ============================================================================
-# Stage 2 – Runtime Image
-# ============================================================================
 FROM nvcr.io/nvidia/pytorch:24.11-py3
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 
-# Install tools and utilities
+# Basic tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl wget nano ffmpeg openssh-server htop tmux \
+    git wget curl nano ffmpeg openssh-server htop tmux \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install JupyterLab
 RUN pip install --no-cache-dir jupyterlab
 
-# Create workspace
+# Create workspace and set as working dir
 RUN mkdir -p /workspace
 WORKDIR /workspace
 
-# Copy ComfyUI and installed packages from builder
-COPY --from=builder /workspace/ComfyUI /workspace/ComfyUI
-COPY --from=builder /usr/local/lib/python3.10 /usr/local/lib/python3.10
-COPY --from=builder /usr/local/bin /usr/local/bin
+# Clone ComfyUI into /workspace/ComfyUI
+RUN git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
+
+WORKDIR /workspace/ComfyUI
+
+# Install ComfyUI requirements
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Install custom nodes
+RUN cd /workspace/ComfyUI/custom_nodes && \
+    git clone https://github.com/ltdrdata/ComfyUI-Manager.git && \
+    git clone https://github.com/kijai/ComfyUI-KJNodes && \
+    git clone https://github.com/MoonGoblinDev/Civicomfy && \
+    for n in */; do \
+        if [ -f "$n/requirements.txt" ]; then \
+            pip install --no-cache-dir -r "$n/requirements.txt" || true; \
+        fi; \
+    done
 
 # Expose ports
 EXPOSE 8188 22 8080 8888
 
-# Copy start script
+# Copy start script from repo (your start.5090.sh) and make executable
 COPY start.5090.sh /start.sh
 RUN chmod +x /start.sh
 
